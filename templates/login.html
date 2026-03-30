@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 公交安全管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <!-- Logo区域 -->
+            <div class="logo-section">
+                <div class="logo-icon">🚌</div>
+                <h1 class="logo-text">公交安全管理系统</h1>
+            </div>
+
+            <!-- 标题 -->
+            <h2 class="login-title">登录</h2>
+
+            <!-- 登录表单 -->
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        placeholder="用户名或工号"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="密码"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <!-- 错误提示 -->
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                <!-- 记住我 -->
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>记住我</span>
+                    </label>
+                </div>
+
+                <!-- 按钮组 -->
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="showDemo()">演示账号</button>
+                    <button type="submit" class="btn-primary">登录</button>
+                </div>
+            </form>
+
+            <!-- 演示账号信息 -->
+            <div id="demoInfo" class="demo-info" style="display: none;">
+                <div class="demo-title">💡 演示账号</div>
+                <div class="demo-accounts">
+                    <div class="demo-account" onclick="fillDemo('admin', 'admin123')">
+                        <strong>管理员:</strong> admin / admin123
+                    </div>
+                    <div class="demo-account" onclick="fillDemo('captain', 'captain123')">
+                        <strong>队长:</strong> captain / captain123
+                    </div>
+                    <div class="demo-account" onclick="fillDemo('driver', 'driver123')">
+                        <strong>司机:</strong> driver / driver123
+                    </div>
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <div class="login-footer">
+                <div class="footer-links">
+                    <a href="#" onclick="alert('请联系系统管理员')">忘记密码？</a>
+                    <span class="divider">•</span>
+                    <a href="/register">创建账号</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // 清空错误信息
+            errorMessage.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        remember_me: rememberMe
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 登录成功，跳转到主页
+                    window.location.href = '/';
+                } else {
+                    // 显示错误信息
+                    errorMessage.textContent = data.message || '登录失败，请检查用户名和密码';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = '网络错误，请稍后重试';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // 显示演示账号
+        function showDemo() {
+            const demoInfo = document.getElementById('demoInfo');
+            demoInfo.style.display = demoInfo.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 填充演示账号
+        function fillDemo(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+            document.getElementById('demoInfo').style.display = 'none';
+        }
+
+        // 回车键登录
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

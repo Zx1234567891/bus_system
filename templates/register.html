@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 公交安全管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .register-box {
+            max-width: 550px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box register-box">
+            <!-- Logo区域 -->
+            <div class="logo-section">
+                <div class="logo-icon">🚌</div>
+                <h1 class="logo-text">公交安全管理系统</h1>
+            </div>
+
+            <!-- 标题 -->
+            <h2 class="login-title">创建新账号</h2>
+
+            <!-- 注册表单 -->
+            <form id="registerForm" class="login-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="emp_code" 
+                            name="emp_code" 
+                            class="form-input" 
+                            placeholder="员工工号"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            class="form-input" 
+                            placeholder="姓名"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <select id="gender" name="gender" class="form-input" required>
+                            <option value="">选择性别</option>
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input 
+                            type="text" 
+                            id="id_card" 
+                            name="id_card" 
+                            class="form-input" 
+                            placeholder="身份证号(18位)"
+                            maxlength="18"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        class="form-input" 
+                        placeholder="手机号码(11位)"
+                        maxlength="11"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="address" 
+                        name="address" 
+                        class="form-input" 
+                        placeholder="家庭住址(可选)"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="date" 
+                        id="hire_date" 
+                        name="hire_date" 
+                        class="form-input" 
+                        required
+                        title="入职日期"
+                    >
+                    <small style="color: #5f6368; font-size: 12px; margin-top: 4px; display: block;">入职日期</small>
+                </div>
+
+                <div class="form-group">
+                    <label style="color: #5f6368; font-size: 14px; margin-bottom: 8px; display: block;">选择头像（可选）</label>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <img id="registerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect fill='%23ddd' width='60' height='60'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%23999'%3E👤%3C/text%3E%3C/svg%3E" alt="头像" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #dadce0; object-fit: cover;">
+                        <button type="button" class="btn-secondary" onclick="toggleRegisterAvatarPicker()" style="padding: 8px 16px; font-size: 14px;">选择头像</button>
+                    </div>
+                    <div id="registerAvatarPicker" style="display: none; background: #f8f9fa; border: 1px solid #dadce0; border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; margin-bottom: 12px;">
+                        <div id="registerAvatarGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 8px;"></div>
+                    </div>
+                    <input type="hidden" id="avatar" name="avatar" value="">
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="设置密码(至少6位)"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        class="form-input" 
+                        placeholder="确认密码"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <!-- 错误提示 -->
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+                <!-- 按钮组 -->
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="window.location.href='/login'">返回登录</button>
+                    <button type="submit" class="btn-primary">注册</button>
+                </div>
+            </form>
+
+            <!-- 页脚 -->
+            <div class="login-footer">
+                <div class="footer-links">
+                    <span style="color: #5f6368; font-size: 13px;">已有账号？</span>
+                    <a href="/login">立即登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设置今天为默认入职日期
+        document.getElementById('hire_date').valueAsDate = new Date();
+
+        // 加载头像列表
+        async function loadRegisterAvatars() {
+            try {
+                const response = await fetch('/api/avatars');
+                const data = await response.json();
+                
+                if (data.success && data.avatars.length > 0) {
+                    const avatarGrid = document.getElementById('registerAvatarGrid');
+                    avatarGrid.innerHTML = '';
+                    
+                    data.avatars.forEach(avatar => {
+                        const avatarItem = document.createElement('div');
+                        avatarItem.style.cssText = 'cursor: pointer; padding: 4px; border-radius: 8px; transition: all 0.2s; border: 2px solid transparent;';
+                        avatarItem.innerHTML = `<img src="/static/avatars/${avatar}" alt="${avatar}" style="width: 100%; height: 50px; object-fit: cover; border-radius: 6px; display: block;">`;
+                        avatarItem.onmouseover = () => {
+                            avatarItem.style.background = '#e8eaed';
+                            avatarItem.style.borderColor = '#1a73e8';
+                        };
+                        avatarItem.onmouseout = () => {
+                            avatarItem.style.background = '';
+                            avatarItem.style.borderColor = 'transparent';
+                        };
+                        avatarItem.onclick = () => selectRegisterAvatar(avatar);
+                        avatarGrid.appendChild(avatarItem);
+                    });
+                }
+            } catch (error) {
+                console.error('加载头像列表失败:', error);
+            }
+        }
+
+        // 切换头像选择器显示
+        function toggleRegisterAvatarPicker() {
+            const picker = document.getElementById('registerAvatarPicker');
+            if (picker.style.display === 'none') {
+                loadRegisterAvatars();
+                picker.style.display = 'block';
+            } else {
+                picker.style.display = 'none';
+            }
+        }
+
+        // 选择头像
+        function selectRegisterAvatar(avatarFilename) {
+            document.getElementById('avatar').value = avatarFilename;
+            document.getElementById('registerAvatar').src = `/static/avatars/${avatarFilename}`;
+            document.getElementById('registerAvatarPicker').style.display = 'none';
+        }
+
+        // 注册表单提交
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // 清空错误信息
+            errorMessage.style.display = 'none';
+            
+            // 验证密码
+            if (password !== confirmPassword) {
+                errorMessage.textContent = '两次输入的密码不一致';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // 验证身份证号
+            const idCard = document.getElementById('id_card').value;
+            if (idCard.length !== 18) {
+                errorMessage.textContent = '身份证号必须为18位';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // 验证手机号
+            const phone = document.getElementById('phone').value;
+            if (phone && phone.length !== 11) {
+                errorMessage.textContent = '手机号必须为11位';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // 收集表单数据
+            const formData = {
+                emp_code: document.getElementById('emp_code').value,
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                id_card: idCard,
+                phone: phone || null,
+                address: document.getElementById('address').value || null,
+                hire_date: document.getElementById('hire_date').value,
+                password: password,
+                avatar: document.getElementById('avatar').value || null
+            };
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('注册成功！请使用您设置的密码登录。');
+                    window.location.href = '/login';
+                } else {
+                    errorMessage.textContent = data.message || '注册失败，请检查输入信息';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = '网络错误，请稍后重试';
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

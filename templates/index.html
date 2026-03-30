@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公交安全管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🚌</div>
+                <h1>公交安全管理</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>系统概览</span>
+                </a>
+                <a href="#" class="nav-item" data-page="add-driver">
+                    <span class="nav-icon">👤</span>
+                    <span>录入司机信息</span>
+                </a>
+                <a href="#" class="nav-item" data-page="add-bus">
+                    <span class="nav-icon">🚍</span>
+                    <span>录入车辆信息</span>
+                </a>
+                <a href="#" class="nav-item" data-page="query-buses">
+                    <span class="nav-icon">🔎</span>
+                    <span>查询车辆信息</span>
+                </a>
+                <a href="#" class="nav-item" data-page="add-violation">
+                    <span class="nav-icon">⚠️</span>
+                    <span>录入违章信息</span>
+                </a>
+                <a href="#" class="nav-item" data-page="query-fleet-drivers">
+                    <span class="nav-icon">🔍</span>
+                    <span>查询车队司机</span>
+                </a>
+                <a href="#" class="nav-item" data-page="query-driver-violations">
+                    <span class="nav-icon">📋</span>
+                    <span>查询司机违章</span>
+                </a>
+                <a href="#" class="nav-item" data-page="query-fleet-stats">
+                    <span class="nav-icon">📈</span>
+                    <span>车队违章统计</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="#" class="nav-item" data-page="ai-assistant">
+                    <span class="nav-icon">🤖</span>
+                    <span>AI智能助手</span>
+                </a>
+                
+                <div class="nav-divider" id="adminDivider" style="display: none;"></div>
+                
+                <a href="#" class="nav-item" data-page="user-management" id="userManagementNav" style="display: none;">
+                    <span class="nav-icon">👥</span>
+                    <span>用户管理</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="page-title">系统概览</h2>
+                <div class="user-info">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <div class="user-avatar" onclick="openProfileModal()" style="cursor: pointer;" title="点击编辑个人资料">👤</div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">加载中...</span>
+                        <span class="user-role" id="userRole"></span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="logout()">登出</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- 系统概览 -->
+                <section id="page-dashboard" class="page active">
+                    <!-- 统计卡片 -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🏢</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-fleets">-</span>
+                                <span class="stat-label">车队数量</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">🛤️</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-routes">-</span>
+                                <span class="stat-label">线路数量</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">👨‍✈️</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-drivers">-</span>
+                                <span class="stat-label">司机人数</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">🚌</div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="stat-buses">-</span>
+                                <span class="stat-label">车辆数量</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表区域 -->
+                    <div class="charts-grid">
+                        <!-- 近30天违章趋势 -->
+                        <div class="chart-card chart-large">
+                            <div class="chart-header">
+                                <h3>📈 近30天违章趋势</h3>
+                                <span class="chart-subtitle">每日违章记录统计</span>
+                            </div>
+                            <div id="trendChart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+
+                        <!-- 违章类型分布 -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>📊 违章类型分布</h3>
+                                <span class="chart-subtitle">按违章类型统计</span>
+                            </div>
+                            <div id="violationTypeChart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+
+                        <!-- 车辆状态分布 -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>🚌 车辆状态分布</h3>
+                                <span class="chart-subtitle">车辆运营状态</span>
+                            </div>
+                            <div id="busStatusChart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+
+                        <!-- 车队违章排名 -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>🏆 车队违章排名</h3>
+                                <span class="chart-subtitle">违章次数对比</span>
+                            </div>
+                            <div id="fleetRankingChart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+
+                        <!-- 违章严重程度 -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>⚠️ 违章严重程度</h3>
+                                <span class="chart-subtitle">按严重等级分布</span>
+                            </div>
+                            <div id="severityChart" class="chart-container" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 车队信息表格 -->
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3>🚗 车队信息总览</h3>
+                            <span class="section-subtitle">实时数据监控</span>
+                        </div>
+                        <div class="table-container">
+                            <table id="fleet-table">
+                                <thead>
+                                    <tr>
+                                        <th>车队编号</th>
+                                        <th>车队名称</th>
+                                        <th>队长</th>
+                                        <th>线路数</th>
+                                        <th>司机数</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 录入司机信息 -->
+                <section id="page-add-driver" class="page">
+                    <div class="form-card">
+                        <h3>录入司机基本信息</h3>
+                        <form id="driver-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>员工工号 <span class="required">*</span></label>
+                                    <input type="text" name="emp_code" required placeholder="如: DRV016">
+                                </div>
+                                <div class="form-group">
+                                    <label>姓名 <span class="required">*</span></label>
+                                    <input type="text" name="name" required placeholder="请输入姓名">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>性别 <span class="required">*</span></label>
+                                    <select name="gender" required>
+                                        <option value="">请选择</option>
+                                        <option value="男">男</option>
+                                        <option value="女">女</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>身份证号 <span class="required">*</span></label>
+                                    <input type="text" name="id_card" required maxlength="18" placeholder="18位身份证号">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>联系电话</label>
+                                    <input type="text" name="phone" maxlength="11" placeholder="11位手机号">
+                                </div>
+                                <div class="form-group">
+                                    <label>入职日期 <span class="required">*</span></label>
+                                    <input type="date" name="hire_date" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label>家庭住址</label>
+                                    <input type="text" name="address" placeholder="请输入家庭住址">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>驾驶证号 <span class="required">*</span></label>
+                                    <input type="text" name="license_no" required placeholder="请输入驾驶证号">
+                                </div>
+                                <div class="form-group">
+                                    <label>驾照类型 <span class="required">*</span></label>
+                                    <select name="license_type" required>
+                                        <option value="A3">A3</option>
+                                        <option value="A1">A1</option>
+                                        <option value="B1">B1</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>驾照有效期 <span class="required">*</span></label>
+                                    <input type="date" name="license_expire_date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>驾龄（年）</label>
+                                    <input type="number" name="driving_years" min="0" value="0">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>所属线路</label>
+                                    <select name="route_id" id="driver-route-select">
+                                        <option value="">暂不分配</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="reset" class="btn btn-secondary">重置</button>
+                                <button type="submit" class="btn btn-primary">提交</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 录入车辆信息 -->
+                <section id="page-add-bus" class="page">
+                    <div class="form-card">
+                        <h3>录入车辆基本信息</h3>
+                        <form id="bus-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>车牌号 <span class="required">*</span></label>
+                                    <input type="text" name="plate_number" required placeholder="如: 川A12345">
+                                </div>
+                                <div class="form-group">
+                                    <label>车辆编号 <span class="required">*</span></label>
+                                    <input type="text" name="bus_code" required placeholder="如: BUS101001">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>品牌</label>
+                                    <input type="text" name="brand" placeholder="如: 宇通">
+                                </div>
+                                <div class="form-group">
+                                    <label>车型</label>
+                                    <input type="text" name="model" placeholder="如: 纯电动公交车">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>座位数</label>
+                                    <input type="number" name="seats" min="1" placeholder="请输入座位数">
+                                </div>
+                                <div class="form-group">
+                                    <label>购置日期</label>
+                                    <input type="date" name="purchase_date">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>所属线路</label>
+                                    <select name="route_id" id="bus-route-select">
+                                        <option value="">暂不分配</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>车辆状态</label>
+                                    <select name="status">
+                                        <option value="运营中">运营中</option>
+                                        <option value="维修中">维修中</option>
+                                        <option value="备用">备用</option>
+                                        <option value="报废">报废</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="reset" class="btn btn-secondary">重置</button>
+                                <button type="submit" class="btn btn-primary">提交</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 查询车辆信息 -->
+                <section id="page-query-buses" class="page">
+                    <div class="query-card">
+                        <h3>查询车辆信息</h3>
+                        <form id="query-buses-form" class="query-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>所属线路</label>
+                                    <select name="route_id" id="query-bus-route-select">
+                                        <option value="">全部线路</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>车辆状态</label>
+                                    <select name="status" id="query-bus-status-select">
+                                        <option value="">全部状态</option>
+                                        <option value="运营中">运营中</option>
+                                        <option value="维修中">维修中</option>
+                                        <option value="报废">报废</option>
+                                        <option value="备用">备用</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">🔍 查询</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- 查询结果 -->
+                        <div id="bus-query-results" class="query-results" style="display:none;">
+                            <div class="result-header">
+                                <h4>查询结果</h4>
+                                <div class="result-stats">
+                                    共找到 <span id="bus-result-count">0</span> 辆车辆
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>车牌号</th>
+                                            <th>车辆编号</th>
+                                            <th>车型</th>
+                                            <th>品牌</th>
+                                            <th>座位数</th>
+                                            <th>所属线路</th>
+                                            <th>购置日期</th>
+                                            <th>车辆状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bus-result-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 录入违章信息 -->
+                <section id="page-add-violation" class="page">
+                    <div class="form-card">
+                        <h3>录入司机违章信息</h3>
+                        <form id="violation-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>违章司机 <span class="required">*</span></label>
+                                    <select name="driver_id" id="violation-driver-select" required>
+                                        <option value="">请选择司机</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>违章车辆 <span class="required">*</span></label>
+                                    <select name="bus_id" id="violation-bus-select" required>
+                                        <option value="">请选择车辆</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>违章类型 <span class="required">*</span></label>
+                                    <select name="violation_type_id" id="violation-type-select" required>
+                                        <option value="">请选择违章类型</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>违章时间 <span class="required">*</span></label>
+                                    <input type="datetime-local" name="violation_time" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>违章地点</label>
+                                    <input type="text" name="violation_location" placeholder="请输入违章地点">
+                                </div>
+                                <div class="form-group">
+                                    <label>站点（可选）</label>
+                                    <select name="station_id" id="violation-station-select">
+                                        <option value="">不指定</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>记录人 <span class="required">*</span></label>
+                                    <select name="recorded_by" id="violation-recorder-select" required>
+                                        <option value="">请选择记录人（队长/路队长）</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label>备注说明</label>
+                                    <textarea name="remarks" rows="3" placeholder="请输入备注说明"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label>违章视频</label>
+                                    <input type="file" id="violation-video" accept="video/*" style="display: none;">
+                                    <input type="hidden" name="video_url" id="violation-video-url">
+                                    <div class="video-upload-container">
+                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('violation-video').click()">
+                                            📹 选择视频
+                                        </button>
+                                        <span id="video-filename" style="margin-left: 10px; color: #666;"></span>
+                                        <div id="video-preview" style="margin-top: 10px; display: none;">
+                                            <video id="violation-video-player" controls style="max-width: 100%; max-height: 300px; border-radius: 8px;"></video>
+                                            <button type="button" class="btn btn-secondary" style="margin-top: 10px;" onclick="removeVideo()">删除视频</button>
+                                        </div>
+                                        <div id="video-upload-progress" style="margin-top: 10px; display: none;">
+                                            <div style="color: #1890ff;">正在上传...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="reset" class="btn btn-secondary">重置</button>
+                                <button type="submit" class="btn btn-primary">提交</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 查询车队司机 -->
+                <section id="page-query-fleet-drivers" class="page">
+                    <div class="query-card">
+                        <h3>查询某车队下的司机信息</h3>
+                        <div class="query-form">
+                            <div class="form-group">
+                                <label>选择车队</label>
+                                <select id="query-fleet-select">
+                                    <option value="">请选择车队</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="queryFleetDrivers()">查询</button>
+                        </div>
+                    </div>
+                    <div class="result-card" id="fleet-drivers-result" style="display: none;">
+                        <h3>查询结果 - <span id="fleet-name-display"></span></h3>
+                        <div class="table-container">
+                            <table id="fleet-drivers-table">
+                                <thead>
+                                    <tr>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>性别</th>
+                                        <th>电话</th>
+                                        <th>线路</th>
+                                        <th>驾照类型</th>
+                                        <th>驾龄</th>
+                                        <th>路队长</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="result-summary" id="fleet-drivers-summary"></div>
+                    </div>
+                </section>
+
+                <!-- 查询司机违章 -->
+                <section id="page-query-driver-violations" class="page">
+                    <div class="query-card">
+                        <h3>查询某司机在某时间段的违章详情</h3>
+                        <div class="query-form">
+                            <div class="form-group">
+                                <label>选择司机</label>
+                                <select id="query-driver-select">
+                                    <option value="">请选择司机</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>开始日期</label>
+                                <input type="date" id="query-start-date">
+                            </div>
+                            <div class="form-group">
+                                <label>结束日期</label>
+                                <input type="date" id="query-end-date">
+                            </div>
+                            <button class="btn btn-primary" onclick="queryDriverViolations()">查询</button>
+                        </div>
+                    </div>
+                    <div class="result-card" id="driver-violations-result" style="display: none;">
+                        <h3>查询结果 - <span id="driver-name-display"></span></h3>
+                        <div class="stats-summary" id="violation-stats"></div>
+                        <div class="table-container">
+                            <table id="driver-violations-table">
+                                <thead>
+                                    <tr>
+                                        <th>违章时间</th>
+                                        <th>违章类型</th>
+                                        <th>车牌号</th>
+                                        <th>地点</th>
+                                        <th>扣分</th>
+                                        <th>罚款</th>
+                                        <th>严重程度</th>
+                                        <th>状态</th>
+                                        <th>视频</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 车队违章统计 -->
+                <section id="page-query-fleet-stats" class="page">
+                    <div class="query-card">
+                        <h3>查询某车队在某时间段的违章统计</h3>
+                        <div class="query-form">
+                            <div class="form-group">
+                                <label>选择车队</label>
+                                <select id="stats-fleet-select">
+                                    <option value="">请选择车队</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>开始日期</label>
+                                <input type="date" id="stats-start-date">
+                            </div>
+                            <div class="form-group">
+                                <label>结束日期</label>
+                                <input type="date" id="stats-end-date">
+                            </div>
+                            <button class="btn btn-primary" onclick="queryFleetStats()">查询</button>
+                        </div>
+                    </div>
+                    <div class="result-card" id="fleet-stats-result" style="display: none;">
+                        <h3>违章统计 - <span id="stats-fleet-name-display"></span></h3>
+                        <div class="stats-summary" id="fleet-stats-summary"></div>
+                        <div class="stats-chart" id="stats-chart"></div>
+                        <div class="table-container">
+                            <table id="fleet-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>违章类型</th>
+                                        <th>次数</th>
+                                        <th>总扣分</th>
+                                        <th>总罚款(元)</th>
+                                        <th>严重程度</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI智能助手 -->
+                <section id="page-ai-assistant" class="page">
+                    <div class="ai-assistant-container">
+                        <div class="ai-header">
+                            <div class="ai-header-left">
+                                <span class="ai-icon">🤖</span>
+                                <div>
+                                    <h3>AI智能助手</h3>
+                                    <p class="ai-subtitle">专业的公交安全管理系统助手</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑️ 清空对话</button>
+                        </div>
+                        
+                        <div class="ai-chat-container" id="ai-chat-container">
+                            <div class="ai-welcome">
+                                <div class="ai-welcome-icon">🤖</div>
+                                <h4>您好！我是公交安全管理系统智能助手</h4>
+                                <p>我可以帮助您查询和管理数据库信息，试试用自然语言提问：</p>
+                                <div class="ai-suggestions">
+                                    <button class="suggestion-btn" onclick="sendSuggestion('查询第一车队的所有司机')">🔍 查询第一车队的所有司机</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('统计各车队的违章次数')">📊 统计各车队的违章次数</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('查询司机赵大勇的违章记录')">📋 查询司机赵大勇的违章记录</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('显示所有运营中的车辆信息')">🚍 显示所有运营中的车辆信息</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('如何录入司机信息？')">📝 如何录入司机信息？</button>
+                                    <button class="suggestion-btn" onclick="sendSuggestion('系统有哪些功能？')">💡 系统有哪些功能？</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-input-container">
+                            <textarea 
+                                id="ai-input" 
+                                class="ai-input" 
+                                placeholder="输入自然语言查询数据库，如：查询第一车队的所有司机。按 Enter 发送..."
+                                rows="1"
+                            ></textarea>
+                            <button class="ai-send-btn" id="ai-send-btn" onclick="sendMessage()">
+                                <span>发送</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 用户管理（仅管理员） -->
+                <section id="page-user-management" class="page">
+                    <div class="management-header">
+                        <h3>用户管理</h3>
+                        <button class="btn btn-primary" onclick="refreshUserList()">🔄 刷新</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>头像</th>
+                                    <th>用户ID</th>
+                                    <th>工号</th>
+                                    <th>姓名</th>
+                                    <th>性别</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>最后登录</th>
+                                    <th>登录失败次数</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 提示框 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 用户编辑对话框 -->
+    <div class="modal" id="userModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">编辑用户</h3>
+                <button class="modal-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="editUsername" disabled>
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="editName" disabled>
+                </div>
+                <div class="form-group">
+                    <label>头像</label>
+                    <div class="avatar-selector" id="avatarSelector">
+                        <div class="current-avatar">
+                            <img id="currentAvatar" src="/static/avatars/default.png" alt="当前头像" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\'%3E%3Crect fill=\'%23ddd\' width=\'60\' height=\'60\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'24\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E'">
+                            <button type="button" class="btn-small btn-primary" onclick="showAvatarPicker()">选择头像</button>
+                        </div>
+                        <div class="avatar-picker" id="avatarPicker" style="display: none;">
+                            <div class="avatar-grid" id="avatarGrid"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="editAvatar">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="editRole">
+                        <option value="admin">系统管理员</option>
+                        <option value="captain">车队队长</option>
+                        <option value="driver">司机</option>
+                        <option value="employee">普通员工</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsActive">
+                        账号激活
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeUserModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveUser()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置密码对话框 -->
+    <div class="modal" id="resetPasswordModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>重置密码</h3>
+                <button class="modal-close" onclick="closeResetPasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resetUserId">
+                <p>用户: <strong id="resetUsername"></strong></p>
+                <div class="form-group">
+                    <label>新密码</label>
+                    <input type="password" id="newPassword" placeholder="至少6位">
+                </div>
+                <div class="form-group">
+                    <label>确认密码</label>
+                    <input type="password" id="confirmNewPassword" placeholder="再次输入新密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeResetPasswordModal()">取消</button>
+                <button class="btn btn-danger" onclick="confirmResetPassword()">重置密码</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 个人资料编辑对话框 -->
+    <div class="modal" id="profileModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑个人资料</h3>
+                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="profileUsername" disabled>
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="profileName" disabled>
+                </div>
+                <div class="form-group">
+                    <label>头像</label>
+                    <div class="avatar-selector">
+                        <div class="current-avatar">
+                            <img id="profileCurrentAvatar" src="" alt="当前头像" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\'%3E%3Crect fill=\'%23ddd\' width=\'60\' height=\'60\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'24\' fill=\'%23999\'%3E👤%3C/text%3E%3C/svg%3E'">
+                            <button type="button" class="btn-small btn-primary" onclick="showProfileAvatarPicker()">选择头像</button>
+                        </div>
+                        <div class="avatar-picker" id="profileAvatarPicker" style="display: none;">
+                            <div class="avatar-grid" id="profileAvatarGrid"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="profileAvatar">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProfileModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveProfile()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑车辆信息对话框 -->
+    <div class="modal" id="editBusModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑车辆信息</h3>
+                <button class="modal-close" onclick="closeEditBusModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editBusId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>车牌号 <span class="required">*</span></label>
+                        <input type="text" id="editPlateNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label>车辆编号 <span class="required">*</span></label>
+                        <input type="text" id="editBusCode" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>车型</label>
+                        <input type="text" id="editModel">
+                    </div>
+                    <div class="form-group">
+                        <label>品牌</label>
+                        <input type="text" id="editBrand">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>座位数</label>
+                        <input type="number" id="editSeats" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>购置日期</label>
+                        <input type="date" id="editPurchaseDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>所属线路</label>
+                        <select id="editRouteId">
+                            <option value="">暂不分配</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>车辆状态</label>
+                        <select id="editStatus">
+                            <option value="运营中">运营中</option>
+                            <option value="维修中">维修中</option>
+                            <option value="报废">报废</option>
+                            <option value="备用">备用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditBusModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveBusEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/user-management.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+</body>
+</html>
